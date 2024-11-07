@@ -1,5 +1,4 @@
-# Define global args
-ARG FUNCTION_DIR="/home/app/"
+ARG FUNCTION_DIR="/home/aayu2/project2.1/"
 ARG RUNTIME_VERSION="3.8"
 
 FROM python:${RUNTIME_VERSION}-alpine AS build-image
@@ -30,7 +29,7 @@ RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCT
 COPY handler.py ${FUNCTION_DIR}
 
 # Set up entry point
-COPY entry.sh /
+COPY entry.sh /entry.sh
 RUN chmod 777 /entry.sh
 
 # Set the CMD to your handler
