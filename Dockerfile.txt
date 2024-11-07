@@ -1,37 +1,64 @@
+# Define global args
 ARG FUNCTION_DIR="/home/aayu2/project2.1/"
 ARG RUNTIME_VERSION="3.8"
+ARG DISTRO_VERSION="3.12"
 
-FROM python:${RUNTIME_VERSION}-alpine AS build-image
+# Base Python image
+FROM python:${RUNTIME_VERSION}-alpine AS python-alpine
 
-# Install required dependencies and libraries
-RUN apk --no-cache add ffmpeg && \
-    python${RUNTIME_VERSION} -m pip install --upgrade pip
+# Install necessary tools
+RUN apk --no-cache add \
+    bash \
+    ffmpeg \
+    build-base \
+    cmake \
+    libtool \
+    automake \
+    autoconf \
+    curl \
+    python3-dev \
+    libxml2-dev \
+    libxslt-dev
 
-# Create function directory
+# Set environment variables
+ENV FUNCTION_DIR=${FUNCTION_DIR}
+ENV RUNTIME_VERSION=${RUNTIME_VERSION}
+ENV DISTRO_VERSION=${DISTRO_VERSION}
+
+# Stage 1 - Build image
+FROM python-alpine AS build-image
+
+# Create the function directory
 RUN mkdir -p ${FUNCTION_DIR}
 
-# Install Lambda Runtime Interface Client for Python
+# Install the Lambda Runtime Interface Client for Python
 RUN python${RUNTIME_VERSION} -m pip install awslambdaric --target ${FUNCTION_DIR}
 
-# Final image
-FROM python:${RUNTIME_VERSION}-alpine
-ARG FUNCTION_DIR
+# Stage 2 - Final runtime image
+FROM python-alpine
+
+# Set working directory to function root directory
 WORKDIR ${FUNCTION_DIR}
 
-# Copy dependencies
+# Copy the built dependencies from the build image
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
 
-# Copy requirements and install them
+# Download the Lambda Runtime Interface Emulator
+ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/bin/aws-lambda-rie
+RUN chmod 755 /usr/bin/aws-lambda-rie
+
+# Install additional required packages (ffmpeg)
+RUN apk --no-cache add ffmpeg
+
+# Copy in the requirements.txt and install dependencies
 COPY requirements.txt ${FUNCTION_DIR}
 RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
 
-# Copy function code
+# Copy the handler function and entrypoint script
+COPY entry.sh /
 COPY handler.py ${FUNCTION_DIR}
-
-# Set up entry point
-COPY entry.sh /entry.sh
 RUN chmod 777 /entry.sh
 
-# Set the CMD to your handler
-ENTRYPOINT [ "/entry.sh" ]
-CMD [ "handler.handler" ]
+# Set the entrypoint and default command
+ENTRYPOINT ["/entry.sh"]
+CMD ["handler.handler"]
