@@ -1,3 +1,4 @@
 boto3==1.26.20  # AWS SDK for Python (interacting with S3)
 botocore==1.29.20  # Lower-level AWS SDK, required by boto3
 awslambdaric==2.0.0  # Lambda Runtime Interface Client
+ffmpeg-python==0.2.0  # Python bindings for ffmpeg
