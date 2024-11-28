@@ -1,0 +1,7 @@
+opencv-python-headless==4.5.5.64  # OpenCV for image processing
+torch==1.9.0+cpu                 # PyTorch (CPU version)
+torchvision==0.10.0+cpu          # PyTorch's computer vision library
+facenet-pytorch                  # Pre-trained face recognition model
+numpy                            # NumPy for numerical operations
+boto3                            # AWS SDK for Python (interacting with S3, Lambda, etc.)
+Pillow                           # PIL for image manipulation (if needed)
